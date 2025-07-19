@@ -20,9 +20,7 @@ from langchain_core.runnables import (
 from langchain_core.output_parsers import StrOutputParser
 
 # Prevent accelerate from loading meta tensors without data
-os.environ["TRANSFORMERS_NO_ACCELERATE"] = "1"
-os.environ["ACCELERATE_DISABLE_RICH"] = "1"
-
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = "[Your Token]"
 # Load environment variables
 load_dotenv()
 
@@ -42,6 +40,9 @@ def extract_video_id(url):
     return None
 
 
+# ✅ Display video template function
+
+
 # User input for YouTube URL
 url = st.text_input("Enter YouTube URL:")
 video_id = extract_video_id(url) if url else None
@@ -59,6 +60,8 @@ input_language = st.selectbox(
 )
 
 transcript = None
+chunks = []
+answer = ""
 
 # Fetch transcript
 if video_id:
@@ -80,19 +83,20 @@ if transcript:
     # Split transcript into text chunks
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     texts = splitter.split_text(transcript)
-    docs = [Document(page_content=text) for text in texts]
+    chunks = [Document(page_content=text) for text in texts]
 
     # Embedding model initialization with HuggingFaceEmbeddings
     try:
         embedding = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={"use_auth_token": "[Your Token]"},
         )
     except Exception as e:
         st.error(f"Error loading embedding model: {e}")
         st.stop()
 
     # Create FAISS vector store
-    vector_store = FAISS.from_documents(docs, embedding)
+    vector_store = FAISS.from_documents(chunks, embedding)
 
     # Retriever setup
     retriever = vector_store.as_retriever(
@@ -139,10 +143,10 @@ Question: {question}
     if question:
         with st.spinner("Generating answer..."):
             try:
-                result = main_chain.invoke(question)
-                st.write(result)
+                answer = main_chain.invoke(question)
+                st.write(f"- **User Question Input**:{question}")
+                st.write(f"- **Generated Answer**:{answer}")
             except Exception as e:
                 st.error(f"Error generating answer: {e}")
-
 else:
     st.info("Please enter a valid URL and ensure transcript is available to proceed.")
