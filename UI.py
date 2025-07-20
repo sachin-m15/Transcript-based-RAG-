@@ -24,7 +24,7 @@ os.environ["HUGGINGFACEHUB_API_TOKEN"] = "[Your API Token]"
 # Load environment variables
 load_dotenv()
 
-st.set_page_config(page_title="Video Transcript AI", page_icon="🎥", layout="wide")
+st.set_page_config(page_title="Video Transcript AI", page_icon="▶️", layout="wide")
 st.markdown(
     """
     <h1 style='text-align: center; color:gray ; text-shadow: 2px 2px white; font-size: 50px;'>
